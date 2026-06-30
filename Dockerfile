@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libegl1 \
     libopengl0 \
     xvfb \
+    xauth \
     ca-certificates \
     python3 \
     python3-pip \
