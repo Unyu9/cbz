@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="panel">
+  <p class="muted">Folder: <code>{{ job.folder }}</code></p>
+  <p id="overall-status"><strong>{{ job.completed }}</strong> / <strong>{{ job.total }}</strong> processed</p>
+  <div class="progress-bar"><div class="progress-bar-fill" id="progress-fill" style="width: {{ (job.completed / job.total * 100) if job.total else 0 }}%;"></div></div>
+</div>
+
+<div class="panel">
+  <table>
+    <thead><tr><th>File</th><th style="width:110px;">Status</th></tr></thead>
+    <tbody id="file-rows">
+      {% for f in job.files %}
+      <tr id="row-{{ loop.index0 }}">
+        <td>{{ f.name }}{% if f.error %}<div class="error-detail">{{ f.error }}</div>{% endif %}</td>
+        <td class="status-{{ f.status }}">{{ f.status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<a class="btn" href="{{ url_for('index') }}">Convert another folder</a>
+
+<script>
+const jobId = {{ job_id|tojson }};
+const total = {{ job.total }};
+
+function statusClass(s) { return 'status-' + s; }
+
+function renderRows(files) {
+  const tbody = document.getElementById('file-rows');
+  files.forEach((f, i) => {
+    const row = document.getElementById('row-' + i);
+    if (!row) return;
+    const statusCell = row.children[1];
+    statusCell.textContent = f.status;
+    statusCell.className = statusClass(f.status);
+    const nameCell = row.children[0];
+    let errDiv = nameCell.querySelector('.error-detail');
+    if (f.error) {
+      if (!errDiv) {
+        errDiv = document.createElement('div');
+        errDiv.className = 'error-detail';
+        nameCell.appendChild(errDiv);
+      }
+      errDiv.textContent = f.error;
+    }
+  });
+}
+
+function poll() {
+  fetch('/api/status/' + jobId)
+    .then(r => r.json())
+    .then(job => {
+      document.getElementById('overall-status').innerHTML =
+        '<strong>' + job.completed + '</strong> / <strong>' + job.total + '</strong> processed' +
+        (job.status === 'done' ? ' &mdash; done' : '');
+      const pct = total ? (job.completed / total * 100) : 0;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      renderRows(job.files);
+      if (job.status !== 'done') {
+        setTimeout(poll, 2000);
+      }
+    })
+    .catch(() => setTimeout(poll, 3000));
+}
+
+setTimeout(poll, 2000);
+</script>
+{% endblock %}

@@ -1,33 +1,43 @@
-# CBZ/CBR to KePub Converter
+# CBZ/CBR to KePub Converter - Web UI
 
-Standalone batch converter, no Grimmory involved. No size limits other than
-what your NAS's disk/CPU can handle.
+Standalone batch converter with a browser UI, no Grimmory involved. No size
+limits other than what your NAS's disk/CPU can handle.
 
-Pipeline: CBZ/CBR -> EPUB (Calibre's `ebook-convert`) -> real KePub (`kepubify`,
-the same tool Grimmory uses internally - genuine KePub output, so you get the
-Kobo reading stats and faster page turns).
+Pipeline: CBZ/CBR -> EPUB (Calibre's `ebook-convert`) -> real KePub
+(`kepubify`, the same tool Grimmory uses internally - genuine KePub output,
+so you get the Kobo reading stats and faster page turns).
 
-## Build
+## Run (Synology / Container Manager / Portainer)
 
-```bash
-docker build -t cbz-to-kepub .
-```
+1. Copy this folder onto your NAS
+2. Edit `docker-compose.yml`: point the two volume mounts at your actual CBZ
+   folder and wherever you want converted files to land
+3. Build and run:
 
-(First build will take a few minutes - it's downloading and installing Calibre.)
+   ```bash
+   docker compose up -d --build
+   ```
 
-## Run
+   (First build takes a few minutes - it's downloading and installing Calibre.)
 
-```bash
-docker run --rm \
-  -v "/path/to/your/cbz/folder:/input" \
-  -v "/path/to/output/folder:/output" \
-  cbz-to-kepub
-```
+4. Open `http://<nas-ip>:5010`
 
-Every `.cbz`/`.cbr` in the input folder gets converted to a `.kepub.epub` in
-the output folder. Already-converted files (matching output name already
-present) are skipped, so it's safe to re-run on a folder you've partially
-processed.
+## Using it
+
+1. Pick the folder to convert (or use the input root directly for a flat
+   folder of files)
+2. Set conversion options:
+   - **Right-to-left** - manga page order (on by default)
+   - **Grayscale** - smaller files, skips color art - leave off for colored manga
+   - **Max image width/height** - optional, shrinks oversized pages
+   - **Hyphenate** / **Smarten punctuation** - kepubify text options
+   - **Skip existing** - safe to re-run on a partially-converted folder
+3. Click **Start Conversion** - you'll land on a live progress page that
+   polls every 2 seconds and shows per-file status (pending / converting /
+   done / skipped / failed), so the browser never just hangs waiting
+
+Failed files show their error inline in the table - usually either Calibre
+or kepubify printing exactly what went wrong.
 
 ## Getting files onto your Kobo
 
@@ -45,9 +55,12 @@ Kobo already understands natively.
 - Large files (500MB+) will take a while and use real CPU/temp disk space
   during conversion - that's expected, this is the same workload Grimmory
   was doing, just without an arbitrary cap.
-- If a file fails, check the log path printed at the end of the run (kept
-  inside the container's temp dir while it's running - if you want logs to
-  persist after a failure, mount a volume for `/tmp` too, or drop `--rm` and
-  inspect the stopped container before removing it).
-- `--output-profile kobo` tells Calibre to optimize the intermediate EPUB
-  for Kobo's screen before kepubify does the real KePub conversion.
+- The comic conversion flags (`--right2left`, `--colors`,
+  `--comic-image-size`) come from Calibre's CLI conventions - if one errors
+  on your installed Calibre version, the per-file error in the progress
+  table will show exactly which flag and why, so it's easy to spot.
+- This app only does conversion, not a persistent library - re-running on
+  the same folder with "Skip existing" on just fills in anything new.
+- If the container restarts mid-job, in-progress jobs are lost (job state
+  lives in memory) - just re-run, "Skip existing" means already-converted
+  files won't be redone.

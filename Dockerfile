@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libopengl0 \
     xvfb \
     ca-certificates \
+    python3 \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Calibre headless (gives us ebook-convert for CBZ -> EPUB)
@@ -19,8 +21,16 @@ RUN wget -nv -O /usr/local/bin/kepubify \
       https://github.com/pgaskin/kepubify/releases/latest/download/kepubify-linux-64bit \
     && chmod +x /usr/local/bin/kepubify
 
-COPY convert.sh /usr/local/bin/convert.sh
-RUN chmod +x /usr/local/bin/convert.sh
+RUN pip3 install --no-cache-dir --break-system-packages flask
 
-WORKDIR /work
-ENTRYPOINT ["/usr/local/bin/convert.sh"]
+WORKDIR /app
+COPY app.py .
+COPY templates ./templates
+
+ENV INPUT_ROOT=/input
+ENV OUTPUT_ROOT=/output
+ENV FLASK_SECRET_KEY=change-me
+
+EXPOSE 5000
+
+CMD ["python3", "app.py"]

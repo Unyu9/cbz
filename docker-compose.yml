@@ -1,0 +1,12 @@
+services:
+  cbz-to-kepub:
+    build: .
+    container_name: cbz-to-kepub
+    ports:
+      - "5010:5000"
+    volumes:
+      - /volume1/data/manga/convert/input:/input
+      - /volume1/data/manga/convert/output:/output
+    environment:
+      - FLASK_SECRET_KEY=s7n4oG60waHDLRQ2TG2iDZnbUxuP/VAv5mA/tgDnf3PEWeHdP6OFaT5MLpl99BnX
+    restart: unless-stopped

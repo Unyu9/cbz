@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+{% block content %}
+<form method="post" action="{{ url_for('convert') }}">
+  <div class="panel">
+    <p class="muted">Scanning <code>{{ input_root }}</code> &middot; output goes to <code>{{ output_root }}</code></p>
+    <label for="folder">Folder to convert</label>
+    <select id="folder" name="folder">
+      <option value="">(input root itself - flat files, no subfolder)</option>
+      {% for f in folders %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
+    </select>
+  </div>
+
+  <div class="panel">
+    <p class="muted" style="margin-top:0;">Comic conversion (Calibre)</p>
+
+    <div class="check-row">
+      <input type="checkbox" id="right2left" name="right2left" checked>
+      <div>
+        <label class="label-text" for="right2left" style="margin:0;">Right-to-left reading direction</label>
+        <span class="hint">Manga page order. Uncheck for Western comics.</span>
+      </div>
+    </div>
+
+    <div class="check-row">
+      <input type="checkbox" id="grayscale" name="grayscale">
+      <div>
+        <label class="label-text" for="grayscale" style="margin:0;">Convert to grayscale</label>
+        <span class="hint">Smaller files, fine for B&amp;W e-ink. Skip for colored manga/comics.</span>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <label for="image_width">Max image width (optional)</label>
+        <input type="number" id="image_width" name="image_width" placeholder="e.g. 1404">
+      </div>
+      <div>
+        <label for="image_height">Max image height (optional)</label>
+        <input type="number" id="image_height" name="image_height" placeholder="e.g. 1872">
+      </div>
+    </div>
+    <p class="muted" style="margin-top:-0.5rem;">Leave both blank to keep original resolution. Useful for shrinking huge files - check the per-file log if this flag errors on your Calibre version.</p>
+  </div>
+
+  <div class="panel">
+    <p class="muted" style="margin-top:0;">KePub conversion (kepubify)</p>
+
+    <div class="check-row">
+      <input type="checkbox" id="hyphenate" name="hyphenate">
+      <div>
+        <label class="label-text" for="hyphenate" style="margin:0;">Force-enable hyphenation</label>
+      </div>
+    </div>
+
+    <div class="check-row">
+      <input type="checkbox" id="smarten_punctuation" name="smarten_punctuation">
+      <div>
+        <label class="label-text" for="smarten_punctuation" style="margin:0;">Smarten punctuation</label>
+        <span class="hint">Converts straight quotes/dashes to curly/em versions.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="check-row" style="margin-bottom:0;">
+      <input type="checkbox" id="skip_existing" name="skip_existing" checked>
+      <div>
+        <label class="label-text" for="skip_existing" style="margin:0;">Skip files already converted</label>
+        <span class="hint">Safe to re-run on a folder you've partially processed.</span>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit">Start Conversion</button>
+</form>
+{% endblock %}
